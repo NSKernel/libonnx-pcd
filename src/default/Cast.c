@@ -624,7 +624,7 @@ static void Cast_int64(struct onnx_node_t * n)
 			{
 				if(py[i])
 					free(py[i]);
-				sprintf(buf, "%ld", px[i]);
+				sprintf(buf, "%lld", px[i]);
 				py[i] = strdup(buf);
 			}
 		}
@@ -1100,7 +1100,7 @@ static void Cast_uint64(struct onnx_node_t * n)
 			{
 				if(py[i])
 					free(py[i]);
-				sprintf(buf, "%lu", px[i]);
+				sprintf(buf, "%llu", px[i]);
 				py[i] = strdup(buf);
 			}
 		}

@@ -2,11 +2,12 @@
 # Makefile for library
 #
 
+WASI_SDK_PATH ?= /home/nskernel/wasi/wasi-sdk-20.0
 CROSS_COMPILE	?= 
 
 AS			:= $(CROSS_COMPILE)gcc -x assembler-with-cpp
-CC			:= $(CROSS_COMPILE)gcc
-CXX			:= $(CROSS_COMPILE)g++
+CC			:= $(WASI_SDK_PATH)/bin/clang
+CXX			:= $(WASI_SDK_PATH)/bin/clang++
 LD			:= $(CROSS_COMPILE)ld
 AR			:= $(CROSS_COMPILE)ar
 OC			:= $(CROSS_COMPILE)objcopy
@@ -14,8 +15,8 @@ OD			:= $(CROSS_COMPILE)objdump
 RM			:= rm -fr
 
 ASFLAGS		:= -g -ggdb -Wall -O3
-CFLAGS		:= -g -ggdb -Wall -O3
-CXXFLAGS	:= -g -ggdb -Wall -O3
+CFLAGS		:= $(TARGET) --sysroot=$(WASI_SDK_PATH)/share/wasi-sysroot/ -D_WASI_EMULATED_PROCESS_CLOCKS
+CXXFLAGS	:= $(TARGET) --sysroot=$(WASI_SDK_PATH)/share/wasi-sysroot/ -D_WASI_EMULATED_PROCESS_CLOCKS
 INCDIRS		:= -I .
 SRCDIRS		:= . default
 
@@ -41,7 +42,7 @@ all : $(NAME)
 
 $(NAME) : $(OBJS)
 	@echo [AR] Archiving $@
-	@$(AR) -rcs $@ $(OBJS)
+	@echo Bypassed for WebAssembly	
 
 $(SOBJS) : %.o : %.S
 	@echo [AS] $<

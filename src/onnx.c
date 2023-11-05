@@ -1925,7 +1925,7 @@ void onnx_tensor_dump(struct onnx_tensor_t * t, int detail)
 						ONNX_LOG("%d,", *((int32_t *)p));
 						break;
 					case ONNX_TENSOR_TYPE_INT64:
-						ONNX_LOG("%ld,", *((int64_t *)p));
+						ONNX_LOG("%lld,", *((int64_t *)p));
 						break;
 					case ONNX_TENSOR_TYPE_UINT8:
 						ONNX_LOG("%u,", *((uint8_t *)p));
@@ -1937,7 +1937,7 @@ void onnx_tensor_dump(struct onnx_tensor_t * t, int detail)
 						ONNX_LOG("%u,", *((uint32_t *)p));
 						break;
 					case ONNX_TENSOR_TYPE_UINT64:
-						ONNX_LOG("%lu,", *((uint64_t *)p));
+						ONNX_LOG("%llu,", *((uint64_t *)p));
 						break;
 					case ONNX_TENSOR_TYPE_BFLOAT16:
 						ONNX_LOG("%g,", bfloat16_to_float32(*((uint16_t *)p)));
@@ -2001,7 +2001,7 @@ void onnx_tensor_dump(struct onnx_tensor_t * t, int detail)
 				ONNX_LOG("%d", *((int32_t *)p));
 				break;
 			case ONNX_TENSOR_TYPE_INT64:
-				ONNX_LOG("%ld", *((int64_t *)p));
+				ONNX_LOG("%lld", *((int64_t *)p));
 				break;
 			case ONNX_TENSOR_TYPE_UINT8:
 				ONNX_LOG("%u", *((uint8_t *)p));
@@ -2013,7 +2013,7 @@ void onnx_tensor_dump(struct onnx_tensor_t * t, int detail)
 				ONNX_LOG("%u", *((uint32_t *)p));
 				break;
 			case ONNX_TENSOR_TYPE_UINT64:
-				ONNX_LOG("%lu", *((uint64_t *)p));
+				ONNX_LOG("%llu", *((uint64_t *)p));
 				break;
 			case ONNX_TENSOR_TYPE_BFLOAT16:
 				ONNX_LOG("%g", bfloat16_to_float32(*((uint16_t *)p)));
@@ -2098,12 +2098,12 @@ void onnx_context_dump(struct onnx_context_t * ctx, int detail)
 	{
 		if(ctx->model)
 		{
-			ONNX_LOG("IR Version: v%ld\r\n", ctx->model->ir_version);
+			ONNX_LOG("IR Version: v%lld\r\n", ctx->model->ir_version);
 			ONNX_LOG("Producer: %s %s\r\n", ctx->model->producer_name, ctx->model->producer_version);
 			ONNX_LOG("Domain: %s\r\n", ctx->model->domain);
 			ONNX_LOG("Imports:\r\n");
 			for(i = 0; i < ctx->model->n_opset_import; i++)
-				ONNX_LOG("\t%s v%ld\r\n", (strlen(ctx->model->opset_import[i]->domain) > 0) ? ctx->model->opset_import[i]->domain : "ai.onnx", ctx->model->opset_import[i]->version);
+				ONNX_LOG("\t%s v%lld\r\n", (strlen(ctx->model->opset_import[i]->domain) > 0) ? ctx->model->opset_import[i]->domain : "ai.onnx", ctx->model->opset_import[i]->version);
 		}
 		if(ctx->g)
 			onnx_graph_dump(ctx->g, detail);

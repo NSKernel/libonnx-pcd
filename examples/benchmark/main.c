@@ -87,7 +87,7 @@ static void profiler_dump(struct hmap_t * m, int count)
 		{
 			p = (struct profiler_t *)e->value;
 			total += p->elapsed;
-			printf("%-32s %ld %12.3f(us)\r\n", e->key, p->count, (p->count > 0) ? ((double)p->elapsed / 1000.0f) / (double)p->count : 0);
+			printf("%-32s %lld %12.3f(us)\r\n", e->key, p->count, (p->count > 0) ? ((double)p->elapsed / 1000.0f) / (double)p->count : 0);
 		}
 		if(count > 0)
 		{

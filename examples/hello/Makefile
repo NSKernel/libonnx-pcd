@@ -2,10 +2,11 @@
 # Makefile for application
 #
 
+WASI_SDK_PATH ?= /home/nskernel/wasi/wasi-sdk-20.0
 CROSS_COMPILE	?= 
 
 AS			:= $(CROSS_COMPILE)gcc -x assembler-with-cpp
-CC			:= $(CROSS_COMPILE)gcc
+CC			:= $(WASI_SDK_PATH)/bin/clang
 CXX			:= $(CROSS_COMPILE)g++
 LD			:= $(CROSS_COMPILE)ld
 AR			:= $(CROSS_COMPILE)ar
@@ -14,9 +15,9 @@ OD			:= $(CROSS_COMPILE)objdump
 RM			:= rm -fr
 
 ASFLAGS		:= -g -ggdb -Wall -O3
-CFLAGS		:= -g -ggdb -Wall -O3
+CFLAGS		:= $(TARGET) -D_WASI_EMULATED_PROCESS_CLOCKS --sysroot=$(WASI_SDK_PATH)/share/wasi-sysroot/ 
 CXXFLAGS	:= -g -ggdb -Wall -O3
-LDFLAGS		:=
+LDFLAGS		:= $(TARGET) -Wl,-lc -Wl,--allow-undefined -Wl,--export=main -Wl,--export=__wasm_call_ctors -Wl,--export=__heap_base,--export=__data_end
 OCFLAGS		:= -v -O binary
 ODFLAGS		:=
 MCFLAGS		:=
@@ -45,13 +46,15 @@ OBJDIRS		:= $(patsubst %, %, $(SRCDIRS))
 NAME		:= hello
 VPATH		:= $(OBJDIRS)
 
+LIBOBJS     := $(foreach dir, ../../src ../../src/default, $(wildcard $(dir)/*.o))
+
 .PHONY: all clean
 
 all : $(NAME)
 
-$(NAME) : $(OBJS)
+$(NAME) : $(OBJS) $(LIBOBJS)
 	@echo [LD] Linking $@
-	@$(CC) $(LDFLAGS) $(LIBDIRS) $^ -o $@ $(LIBS) -static
+	@$(CC) $(LDFLAGS) $(LIBDIRS) $^ -o $@ -static
 
 $(SOBJS) : %.o : %.S
 	@echo [AS] $<

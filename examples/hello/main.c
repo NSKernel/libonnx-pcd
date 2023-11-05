@@ -2254,7 +2254,7 @@ int main(int argc, char * argv[])
 		/*
 		 * Dump onnx context
 		 */
-		onnx_context_dump(ctx, 0);
+		//onnx_context_dump(ctx, 0);
 
 		/*
 		 * Get input tensor by name
@@ -2274,7 +2274,7 @@ int main(int argc, char * argv[])
 		/*
 		 * Dump input tensor
 		 */
-		onnx_tensor_dump(input, 1);
+		//onnx_tensor_dump(input, 1);
 
 		/*
 		 * Run inference

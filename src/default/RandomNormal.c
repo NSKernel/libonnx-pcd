@@ -78,8 +78,8 @@ static void RandomNormal_operator(struct onnx_node_t * n)
 			float ty, tx;
 			for(size_t i = 0, l = y->ndata; i < l; i++)
 			{
-				ty = (float)rand() / (RAND_MAX + 1.0f);
-				tx = (float)rand() / (RAND_MAX + 1.0f);
+				ty = (float)rand() / ((float)RAND_MAX + 1.0f);
+				tx = (float)rand() / ((float)RAND_MAX + 1.0f);
 				py[i] = float16_to_float32(pdat->mean + pdat->scale * sqrtf(-2.0f * logf(tx)) * cosf(2.0f * acosf(-1.0f) * ty));
 			}
 		}
@@ -90,8 +90,8 @@ static void RandomNormal_operator(struct onnx_node_t * n)
 			float ty, tx;
 			for(size_t i = 0, l = y->ndata; i < l; i++)
 			{
-				ty = (float)rand() / (RAND_MAX + 1.0f);
-				tx = (float)rand() / (RAND_MAX + 1.0f);
+				ty = (float)rand() / ((float)RAND_MAX + 1.0f);
+				tx = (float)rand() / ((float)RAND_MAX + 1.0f);
 				py[i] = pdat->mean + pdat->scale * sqrtf(-2.0f * logf(tx)) * cosf(2.0f * acosf(-1.0f) * ty);
 			}
 		}
@@ -102,8 +102,8 @@ static void RandomNormal_operator(struct onnx_node_t * n)
 			double ty, tx;
 			for(size_t i = 0, l = y->ndata; i < l; i++)
 			{
-				ty = (double)rand() / (RAND_MAX + 1.0f);
-				tx = (double)rand() / (RAND_MAX + 1.0f);
+				ty = (double)rand() / ((float)RAND_MAX + 1.0f);
+				tx = (double)rand() / ((float)RAND_MAX + 1.0f);
 				py[i] = pdat->mean + pdat->scale * sqrt(-2.0f * log(tx)) * cos(2.0f * acos(-1.0f) * ty);
 			}
 		}
