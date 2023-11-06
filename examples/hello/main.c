@@ -1,6 +1,10 @@
 #include <onnx.h>
+#include <stdio.h>
 
-static const unsigned char mnist_onnx[] = {
+#include "dataset.h"
+#include "error_codes.h"
+
+static const unsigned char gnd_truth[] = {
 	0x08, 0x03, 0x12, 0x04, 0x43, 0x4e, 0x54, 0x4b, 0x1a, 0x05, 0x32, 0x2e,
 	0x35, 0x2e, 0x31, 0x22, 0x07, 0x61, 0x69, 0x2e, 0x63, 0x6e, 0x74, 0x6b,
 	0x28, 0x01, 0x3a, 0xb2, 0xce, 0x01, 0x0a, 0x62, 0x0a, 0x0c, 0x50, 0x61,
@@ -2208,47 +2212,163 @@ static const unsigned char mnist_onnx[] = {
 	0x42, 0x04, 0x0a, 0x00, 0x10, 0x08
 };
 
-static const float input_3[] = {
-	 0,   0,   0,   0,   0,   0,   0,   0,   0,   1,   3,   0,   0,   4,   2,   0,  11,   0,   0,  14,   1,   0,  19,   0,   0,   0,   0,   0,
-	 0,   0,   0,   0,   0,   0,   0,   0,   0,  12,   0,   0,   7,   0,   1,  10,   0,   2,   2,  16,   0,   3,   3,   0,   0,   0,   0,   0,
-	 0,   0,   0,   0,   0,   0,   0,   0,   7,   8,   0,   8,   0,   0,   8,   0,   0,  19,   0,   0,   1,  21,   0,   4,   0,   0,   0,   0,
-	 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   1,   0,   0,   1,   0,   0,   0,   0,   0,  11,   0,   0,  10,   3,   0,   0,   0,   0,
-	 0,   0,   0,   0,   0,   0,   0,   0,  13,   0,  15,  10,  26,  34,  17,  77, 181, 178,  35,   4,   0,   0,   0,   0,   0,   0,   0,   0,
-	 0,   0,   0,   0,   0,   0,   0,   0,   0,   0, 150, 254, 250, 251, 243, 252, 252, 255,  45,   6,   0,   5,   0,   9,   0,   0,   0,   0,
-	 0,   0,   0,   0,   0,   0,   0,   0,   7,  72, 205, 255, 238, 243, 255, 254, 251, 248, 201, 198,  57,   0,  19,   0,   0,   0,   0,   0,
-	 0,   0,   0,   0,   0,   0,   0,   0,   0, 218, 255, 241, 255, 249, 250, 251, 250, 255, 255, 242, 224,  49,   0,  12,   0,   0,   0,   0,
-	 0,   0,   1,   2,   3,   2,   2,   1,   0,  65, 228, 255, 254, 244, 119,  34,  41, 110, 250, 255, 248, 124,  20,   0,   0,   0,   0,   0,
-	 1,   1,   0,   0,   0,   0,   0,   0,  12,   0,  62, 103, 113, 117,  34,   0,   0,   0, 200, 244, 255, 255,   0,  12,   0,   0,   0,   0,
-	 2,   1,   0,   0,   0,   0,   1,   2,   0,   0,   2,   4,   0,  11,   0,   7,   6,   0,  75, 244, 255, 255,   4,   0,   0,   0,   0,   0,
-	 0,   0,   0,   1,   2,   3,   4,   4,   0,  14,   0,   0,   0,   9,   0,   2,   0,   0,  34, 255, 255, 253,  10,  10,   0,   0,   0,   0,
-	 0,   0,   1,   2,   3,   2,   0,   0,   3,   2,   0,  13,  11,   0,   0,   0,   6,  12,  99, 255, 254, 248,  15,  12,   0,   0,   0,   0,
-	 0,   1,   1,   1,   0,   0,   0,   0,   1,   1,   0,   0,   5,   6,  11,   0,   0,  17, 184, 247, 255, 243,  13,   0,   0,   0,   0,   0,
-	 3,   2,   0,   0,   0,   0,   2,   4,   4,   0,  11,   0,  51,  94,  85,   5,   5,  25, 246, 246, 255, 208,   0,   9,   0,   0,   0,   0,
-	 4,   1,   0,   0,   1,   7,  15,  19,  99, 103, 182, 189, 237, 253, 252, 191, 190, 227, 243, 252, 210,  18,   7,   0,   0,   0,   0,   0,
-	 0,   4,   0,   0,  32, 109, 185, 247, 255, 242, 255, 244, 255, 255, 242, 251, 255, 240, 255, 255, 218, 124,   9,   0,   0,   0,   0,   0,
-	 2,   0,   0,   0, 127, 255, 235, 255, 255, 247, 229, 212, 242, 250, 255, 255, 248, 255, 253, 249, 255, 243, 170,  12,   0,   0,   0,   0,
-	 0,  11,   0,   9, 253, 255, 255, 233, 202,  85,   0,  53, 196, 238, 255, 227, 238, 142, 109, 193, 255, 240, 255, 180,   0,   0,   0,   0,
-	 6,   0,  22,   1, 245, 243, 254, 255, 217, 235, 226, 213, 244, 251, 255, 239,  77,   0,   0,  20, 182, 247, 239, 243,   0,   0,   0,   0,
-	 0,   0,   0,   4, 165, 251, 255, 245, 255, 242, 253, 250, 255, 197, 107,  59,   0,  18,   2,   6,   0,  54, 255, 158,   0,   0,   0,   0,
-	 0,  24,   0,   0,   6,  34, 167, 194, 176, 183, 164,  44,   2,  10,   6,   6,   0,   0,   5,   0,   1,   0,  14,   2,   0,   0,   0,   0,
-	10,   0,  14,   0,  12,   0,   5,   0,   1,   0,   6,   0,   7,   0,   0,   0,   8,   0,  10,   0,   5,   0,   0,  10,   0,   0,   0,   0,
-	 0,  14,   0,   4,   0,   0,  25,   0,   0,   9,   0,   0,   9,   0,  11,   0,   1,   0,   0,   2,   0,   0,   7,   0,   0,   0,   0,   0,
-	 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-	 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-	 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-	 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-};
+extern char *read_file_to_buffer(const char *filename, size_t *ret_size);
 
-int main(int argc, char * argv[])
-{
+void pcd_policy_disc_print_id(pcd_identity_t *id) {
+	uint8_t *id_ptr = (uint8_t *)id;
+	int i;
+	printf("%08x-", ((uint32_t*)(id_ptr))[0]);
+	printf("%04x-", *((uint16_t*)(&id_ptr[4])));
+	printf("%04x-", *((uint16_t*)(&id_ptr[6])));
+	for (i = 8; i < 10; i++) {
+		printf("%02x", id_ptr[i]);
+	}
+	printf("-");
+	for (i = 10; i < 16; i++) {
+		printf("%02x", id_ptr[i]);
+	}
+}
+
+char cmdbuffer[100];
+
+#define PCD_RUNTIME_FREE	builtin_free
+
+void builtin_free(void *ptr) __attribute__((
+	__import_module__("env"),
+	__import_name__("free")
+));
+
+int main() {
 	struct onnx_context_t * ctx;
 	struct onnx_tensor_t * input;
 	struct onnx_tensor_t * output;
 
+	uint32_t dataset_index;
+	uint32_t ret;
+
+	char *mnist_onnx_pcd = NULL;
+	size_t mnist_pcd_size;
+	char *input_3_pcd = NULL;
+	size_t input_3_pcd_size;
+	pcd_payload_t *mnist_onnx_payload = NULL;
+	char *mnist_onnx = NULL;
+	size_t mnist_size;
+	pcd_payload_t *input_3_payload = NULL;
+	char *input_3 = NULL;
+	size_t input_3_size;
+
+	char *mnist_ground_truth = NULL;
+
+	pcd_identity_t *owner_id = NULL;
+	size_t owner_id_size;
+	
+	printf("Enter owner ID path: ");
+	fflush(stdout);
+	scanf("%s", cmdbuffer);		
+	owner_id = (pcd_identity_t *)read_file_to_buffer(cmdbuffer, &owner_id_size);
+	if (owner_id == NULL) {
+		printf("[-] WASM App: ERROR: Failed to read owner ID %s\n", cmdbuffer);
+		return -1;
+	}
+	if (owner_id_size != sizeof(pcd_identity_t)) {
+		printf("[-] WASM App: ERROR: Wrong owner ID size %zu vs %lu\n", owner_id_size, sizeof(pcd_identity_t));
+		PCD_RUNTIME_FREE(owner_id);
+		return -1;
+	}
+
+	printf("[+] Owner ID set");
+	pcd_policy_disc_print_id(owner_id);
+	printf("\n");
+
+	printf("Enter model path: ");
+	fflush(stdout);
+	scanf("%s", cmdbuffer);
+	mnist_onnx_pcd = read_file_to_buffer(cmdbuffer, &mnist_pcd_size);
+	if (mnist_onnx_pcd == NULL) {
+		printf("[-] hello: ERROR: Failed to read the model %s\n", cmdbuffer);
+		return -1;
+	}
+	printf("Enter input path: ");
+	fflush(stdout);
+	scanf("%s", cmdbuffer);
+	input_3_pcd = read_file_to_buffer(cmdbuffer, &input_3_pcd_size);
+	if (input_3_pcd == NULL) {
+		printf("[-] hello: ERROR: Failed to read the input %s\n", cmdbuffer);
+		return -1;
+	}
+
+	dataset_index = pcd_dataset_new(2);
+	if (((int)dataset_index) < 0) {
+		printf("[-] hello: ERROR: Failed to create new dataset with %d\n", (int)dataset_index);
+		return (int)dataset_index;
+	}
+	printf("[+] Dataset %d ready\n", dataset_index);
+
+	ret = pcd_dataset_add_data(dataset_index, (pcd_enc_data_t *)mnist_onnx_pcd);
+	if (ret != PCD_OK) {
+		printf("[-] hello: ERROR: Failed to add data to dataset\n");
+		return -1;
+	}
+	printf("[+] hello: INFO: Added model to dataset\n");
+	PCD_RUNTIME_FREE(mnist_onnx_pcd);
+
+	ret = pcd_dataset_add_data(dataset_index, (pcd_enc_data_t *)input_3_pcd);
+	if (ret != PCD_OK) {
+		printf("[-] hello: ERROR: Failed to add data to dataset\n");
+		return -1;
+	}
+	printf("[+] hello: INFO: Added input to dataset\n");
+	PCD_RUNTIME_FREE(input_3_pcd);
+
+	ret = pcd_dataset_check_policy(dataset_index, owner_id);
+	if (ret != PCD_OK) {
+		if (ret == PCD_DENINED) {
+			printf("[-] hello: ERROR: Policy does not match\n");
+		}
+		else {
+			printf("[-] hello: ERROR: Policy check failed with %d\n", ret);
+		}
+		return -1;
+	}
+	printf("[+] hello: INFO: Policy passed\n");
+
+	mnist_onnx_payload = (pcd_payload_t *)pcd_dataset_access(dataset_index, 0);
+	if (mnist_onnx_payload == NULL) {
+		printf("[-] hello: ERROR: Failed to access dataset %d's model\n", dataset_index);
+		return -1;
+	}
+	input_3_payload = (pcd_payload_t *)pcd_dataset_access(dataset_index, 1);
+	if (mnist_onnx_payload == NULL) {
+		printf("[-] hello: ERROR: Failed to access dataset %d's input\n", dataset_index);
+		return -1;
+	}
+
+	mnist_onnx = (char *)mnist_onnx_payload->payload;
+	mnist_size = mnist_onnx_payload->data_size;
+	input_3 = (char *)input_3_payload->payload;
+	input_3_size = input_3_payload->data_size;
+
+	for (int i = 0; i < sizeof(gnd_truth); i++) {
+		if ((char)mnist_onnx[i] != (char)gnd_truth[i]) {
+			printf("ERROR: ground truth mistach at %d. mnist_onnx[i] = %02X, gnd_truth[i] = %02X\n", i, (char)mnist_onnx[i], gnd_truth[i]);
+			return -1;
+		}
+	}
+	printf("INFO: Ground truth matches\n");
+
+	printf("[+] hello: INFO: model size is %d\n", mnist_size);
+	printf("                 First 16 bytes are\n");
+	printf("                 %02X %02X %02X %02X %02X %02X %02X %02X\n", mnist_onnx[0], mnist_onnx[1], mnist_onnx[2], mnist_onnx[3], mnist_onnx[4], mnist_onnx[5] ,mnist_onnx[6], mnist_onnx[7]);
+	printf("                 %02X %02X %02X %02X %02X %02X %02X %02X\n", mnist_onnx[8], mnist_onnx[9], mnist_onnx[10], mnist_onnx[11], mnist_onnx[12], mnist_onnx[13] ,mnist_onnx[14], mnist_onnx[15]);
+	printf("                 Last 16 bytes are\n");
+	printf("                 %02X %02X %02X %02X %02X %02X %02X %02X\n", mnist_onnx[mnist_size - 16], mnist_onnx[mnist_size - 15], mnist_onnx[mnist_size - 14], mnist_onnx[mnist_size - 13], mnist_onnx[mnist_size - 12], mnist_onnx[mnist_size - 11] ,mnist_onnx[mnist_size - 10], mnist_onnx[mnist_size - 9]);
+	printf("                 %02X %02X %02X %02X %02X %02X %02X %02X\n", mnist_onnx[mnist_size - 8], mnist_onnx[mnist_size - 7], mnist_onnx[mnist_size - 6], mnist_onnx[mnist_size - 5], mnist_onnx[mnist_size - 4], mnist_onnx[mnist_size - 3] ,mnist_onnx[mnist_size - 2], mnist_onnx[mnist_size - 1]);
+	printf("[+] hello: INFO: input size is %d\n", input_3_size);
+
 	/*
 	 * Alloc onnx context from buffer
 	 */
-	ctx = onnx_context_alloc(mnist_onnx, sizeof(mnist_onnx), NULL, 0);
+	ctx = onnx_context_alloc(mnist_onnx, mnist_size, NULL, 0);
 	if(ctx)
 	{
 		/*
@@ -2269,7 +2389,7 @@ int main(int argc, char * argv[])
 		/*
 		 * Fill some data to input tensor
 		 */
-		onnx_tensor_apply(input, (void *)input_3, sizeof(input_3));
+		onnx_tensor_apply(input, (void *)input_3, input_3_size);
 
 		/*
 		 * Dump input tensor
@@ -2290,6 +2410,10 @@ int main(int argc, char * argv[])
 		 * Free onnx context
 		 */
 		onnx_context_free(ctx);
+	}
+	else {
+		printf("[-] hello: Failed to alloc context\n");
+		return -1;
 	}
 	return 0;
 }

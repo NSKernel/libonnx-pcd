@@ -5,6 +5,11 @@
 WASI_SDK_PATH ?= /home/nskernel/wasi/wasi-sdk-20.0
 CROSS_COMPILE	?= 
 
+PCD_ROOT := ../../../../../../
+
+include $(PCD_ROOT)/config.mk
+include $(PCD_ROOT)/buildenv.mk
+
 AS			:= $(CROSS_COMPILE)gcc -x assembler-with-cpp
 CC			:= $(WASI_SDK_PATH)/bin/clang
 CXX			:= $(CROSS_COMPILE)g++
@@ -15,9 +20,9 @@ OD			:= $(CROSS_COMPILE)objdump
 RM			:= rm -fr
 
 ASFLAGS		:= -g -ggdb -Wall -O3
-CFLAGS		:= $(TARGET) -D_WASI_EMULATED_PROCESS_CLOCKS --sysroot=$(WASI_SDK_PATH)/share/wasi-sysroot/ 
+CFLAGS		:= $(TARGET) -I$(WASI_SDK_PATH)/share/wasi-sysroot/include/ -D_WASI_EMULATED_PROCESS_CLOCKS --sysroot=$(WASI_SDK_PATH)/share/wasi-sysroot/ $(C_Flags)
 CXXFLAGS	:= -g -ggdb -Wall -O3
-LDFLAGS		:= $(TARGET) -Wl,-lc -Wl,--allow-undefined -Wl,--export=main -Wl,--export=__wasm_call_ctors -Wl,--export=__heap_base,--export=__data_end
+LDFLAGS		:= $(TARGET) -Wl,-lc -Wl,--allow-undefined -Wl,--export=malloc -Wl,--export=free -Wl,--export=main -Wl,--export=__wasm_call_ctors -Wl,--export=__heap_base,--export=__data_end -z stack-size=3145728 -Wl,--initial-memory=83886080
 OCFLAGS		:= -v -O binary
 ODFLAGS		:=
 MCFLAGS		:=
@@ -55,6 +60,8 @@ all : $(NAME)
 $(NAME) : $(OBJS) $(LIBOBJS)
 	@echo [LD] Linking $@
 	@$(CC) $(LDFLAGS) $(LIBDIRS) $^ -o $@ -static
+	@echo [HASH]  $@
+	@sha256sum hello | cut -d " " -f 1 | xxd -r -p > ../../../app.hash
 
 $(SOBJS) : %.o : %.S
 	@echo [AS] $<
