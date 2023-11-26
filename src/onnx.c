@@ -28,7 +28,37 @@
 #include <onnx.h>
 #include <default/default.h>
 
+#include <stdio.h>
+#include <string.h>
+
+// override
+extern int printf(const char *, ...);
+
 #define ONNX_LOG(...)	printf(__VA_ARGS__)
+
+static inline uint64_t time_get(void)
+{
+	struct timespec ts;
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+	return (uint64_t)ts.tv_sec * 1000000000ULL + (uint64_t)ts.tv_nsec;
+}
+
+void stopwatch_start(uint64_t *time)
+{
+	if(time)
+		*time = time_get();
+}
+
+void stopwatch_lap(char *txt, uint64_t *time)
+{
+	uint64_t new_time;
+	if(time)
+	{
+		new_time = time_get();
+		printf("time elapsed at %s is %llu\n", txt, new_time - *time);
+		*time = time_get();
+	}
+}
 
 static void hmap_entry_callback(struct hmap_t * m, struct hmap_entry_t * e)
 {
@@ -36,24 +66,27 @@ static void hmap_entry_callback(struct hmap_t * m, struct hmap_entry_t * e)
 		onnx_tensor_free((struct onnx_tensor_t *)e->value);
 }
 
-struct onnx_context_t * onnx_context_alloc(const void * buf, size_t len, struct onnx_resolver_t ** r, int rlen)
+pcd_runtime_pointer_t onnx_context_alloc(const void * buf, size_t len, struct onnx_resolver_t ** r, int rlen)
 {
 	struct onnx_context_t * ctx;
+	pcd_runtime_pointer_t ctx_app_addr;
 	int i;
 
-	if(!buf || len <= 0)
-		return NULL;
+	if(!buf || len <= 0) {
+		return 0;
+	}
 
-	ctx = malloc(sizeof(struct onnx_context_t));
-	if(!ctx)
-		return NULL;
+	ctx = onnx_malloc(sizeof(struct onnx_context_t), &ctx_app_addr);
+	if(!ctx) {
+		return 0;
+	}
 
 	ctx->model = onnx__model_proto__unpack(NULL, len, buf);
 	if(!ctx->model)
 	{
 		if(ctx)
-			free(ctx);
-		return NULL;
+			onnx_free(ctx);
+		return 0;
 	}
 
 	ctx->map = hmap_alloc(0, hmap_entry_callback);
@@ -62,8 +95,8 @@ struct onnx_context_t * onnx_context_alloc(const void * buf, size_t len, struct 
 		if(ctx->model)
 			onnx__model_proto__free_unpacked(ctx->model, NULL);
 		if(ctx)
-			free(ctx);
-		return NULL;
+			onnx_free(ctx);
+		return 0;
 	}
 
 	ctx->rlen = rlen;
@@ -82,8 +115,8 @@ struct onnx_context_t * onnx_context_alloc(const void * buf, size_t len, struct 
 			if(ctx->model)
 				onnx__model_proto__free_unpacked(ctx->model, NULL);
 			if(ctx)
-				free(ctx);
-			return NULL;
+				onnx_free(ctx);
+			return 0;
 		}
 	}
 	else
@@ -116,39 +149,10 @@ struct onnx_context_t * onnx_context_alloc(const void * buf, size_t len, struct 
 		if(ctx->model)
 			onnx__model_proto__free_unpacked(ctx->model, NULL);
 		if(ctx)
-			free(ctx);
-		return NULL;
+			onnx_free(ctx);
+		return 0;
 	}
-
-	return ctx;
-}
-
-struct onnx_context_t * onnx_context_alloc_from_file(const char * filename, struct onnx_resolver_t ** r, int rlen)
-{
-	struct onnx_context_t * ctx = NULL;
-	FILE * fp;
-	void * buf;
-	size_t l, len;
-
-	fp = fopen(filename, "rb");
-	if(fp)
-	{
-		fseek(fp, 0L, SEEK_END);
-		l = ftell(fp);
-		fseek(fp, 0L, SEEK_SET);
-		if(l > 0)
-		{
-			buf = malloc(l);
-			if(buf)
-			{
-				for(len = 0; len < l; len += fread(buf + len, 1, l - len, fp));
-				ctx = onnx_context_alloc(buf, len, r, rlen);
-				free(buf);
-			}
-		}
-		fclose(fp);
-	}
-	return ctx;
+	return ctx_app_addr;
 }
 
 void onnx_context_free(struct onnx_context_t * ctx)
@@ -172,7 +176,7 @@ void onnx_context_free(struct onnx_context_t * ctx)
 			hmap_free(ctx->map);
 		if(ctx->model)
 			onnx__model_proto__free_unpacked(ctx->model, NULL);
-		free(ctx);
+		onnx_free(ctx);
 	}
 }
 
@@ -1358,58 +1362,8 @@ struct onnx_tensor_t * onnx_tensor_alloc(const char * name, enum onnx_tensor_typ
 		return NULL;
 	memset(t, 0, sizeof(struct onnx_tensor_t));
 
-	t->name = strdup(name);
+	t->name = strndup(name, 256);
 	onnx_tensor_reinit(t, type, dims, ndim);
-	return t;
-}
-
-struct onnx_tensor_t * onnx_tensor_alloc_from_file(const char * filename)
-{
-	struct onnx_tensor_t * t = NULL;
-	Onnx__TensorProto * pb;
-	FILE * fp;
-	void * buf;
-	size_t l, len;
-	int * dims = NULL;
-	int ndim = 0;
-	int i;
-
-	fp = fopen(filename, "rb");
-	if(fp)
-	{
-		fseek(fp, 0L, SEEK_END);
-		l = ftell(fp);
-		fseek(fp, 0L, SEEK_SET);
-		if(l > 0)
-		{
-			buf = malloc(l);
-			if(buf)
-			{
-				for(len = 0; len < l; len += fread(buf + len, 1, l - len, fp));
-				pb = onnx__tensor_proto__unpack(NULL, len, buf);
-				free(buf);
-				if(pb)
-				{
-					if(pb->n_dims > 0)
-					{
-						dims = malloc(sizeof(int) * pb->n_dims);
-						if(dims)
-						{
-							for(i = 0; i < pb->n_dims; i++)
-								dims[i] = pb->dims[i];
-							ndim = pb->n_dims;
-						}
-					}
-					t = onnx_tensor_alloc(pb->name, (enum onnx_tensor_type_t)pb->data_type, dims, ndim);
-					if((ndim > 0) && dims)
-						free(dims);
-					onnx_tensor_copy_from_tensor_proto(t, pb);
-					onnx__tensor_proto__free_unpacked(pb, NULL);
-				}
-			}
-		}
-		fclose(fp);
-	}
 	return t;
 }
 
@@ -1688,7 +1642,7 @@ void onnx_tensor_apply(struct onnx_tensor_t * t, void * buf, size_t len)
 					}
 					l = min(t->ndata, (size_t)len);
 					for(size_t idx = 0; idx < l; idx++)
-						p[idx] = strdup(q[idx]);
+						p[idx] = strndup(q[idx], strlen(q[idx]) + 1);
 				}
 				else
 				{
@@ -1744,6 +1698,9 @@ char * onnx_attribute_read_string(struct onnx_node_t * n, const char * name, cha
 	{
 		if(attr->s.len > 0)
 		{
+			attr->s.data=realloc(attr->s.data,attr->s.len+1);
+			if(attr->s.data==NULL)
+					return def;
 			attr->s.data[attr->s.len] = 0;
 			return (char *)attr->s.data;
 		}
@@ -1925,7 +1882,7 @@ void onnx_tensor_dump(struct onnx_tensor_t * t, int detail)
 						ONNX_LOG("%d,", *((int32_t *)p));
 						break;
 					case ONNX_TENSOR_TYPE_INT64:
-						ONNX_LOG("%ld,", *((int64_t *)p));
+						ONNX_LOG("%lld,", *((int64_t *)p));
 						break;
 					case ONNX_TENSOR_TYPE_UINT8:
 						ONNX_LOG("%u,", *((uint8_t *)p));
@@ -1937,7 +1894,7 @@ void onnx_tensor_dump(struct onnx_tensor_t * t, int detail)
 						ONNX_LOG("%u,", *((uint32_t *)p));
 						break;
 					case ONNX_TENSOR_TYPE_UINT64:
-						ONNX_LOG("%lu,", *((uint64_t *)p));
+						ONNX_LOG("%llu,", *((uint64_t *)p));
 						break;
 					case ONNX_TENSOR_TYPE_BFLOAT16:
 						ONNX_LOG("%g,", bfloat16_to_float32(*((uint16_t *)p)));
@@ -2001,7 +1958,7 @@ void onnx_tensor_dump(struct onnx_tensor_t * t, int detail)
 				ONNX_LOG("%d", *((int32_t *)p));
 				break;
 			case ONNX_TENSOR_TYPE_INT64:
-				ONNX_LOG("%ld", *((int64_t *)p));
+				ONNX_LOG("%lld", *((int64_t *)p));
 				break;
 			case ONNX_TENSOR_TYPE_UINT8:
 				ONNX_LOG("%u", *((uint8_t *)p));
@@ -2013,7 +1970,7 @@ void onnx_tensor_dump(struct onnx_tensor_t * t, int detail)
 				ONNX_LOG("%u", *((uint32_t *)p));
 				break;
 			case ONNX_TENSOR_TYPE_UINT64:
-				ONNX_LOG("%lu", *((uint64_t *)p));
+				ONNX_LOG("%llu", *((uint64_t *)p));
 				break;
 			case ONNX_TENSOR_TYPE_BFLOAT16:
 				ONNX_LOG("%g", bfloat16_to_float32(*((uint16_t *)p)));
@@ -2098,12 +2055,12 @@ void onnx_context_dump(struct onnx_context_t * ctx, int detail)
 	{
 		if(ctx->model)
 		{
-			ONNX_LOG("IR Version: v%ld\r\n", ctx->model->ir_version);
+			ONNX_LOG("IR Version: v%lld\r\n", ctx->model->ir_version);
 			ONNX_LOG("Producer: %s %s\r\n", ctx->model->producer_name, ctx->model->producer_version);
 			ONNX_LOG("Domain: %s\r\n", ctx->model->domain);
 			ONNX_LOG("Imports:\r\n");
 			for(i = 0; i < ctx->model->n_opset_import; i++)
-				ONNX_LOG("\t%s v%ld\r\n", (strlen(ctx->model->opset_import[i]->domain) > 0) ? ctx->model->opset_import[i]->domain : "ai.onnx", ctx->model->opset_import[i]->version);
+				ONNX_LOG("\t%s v%lld\r\n", (strlen(ctx->model->opset_import[i]->domain) > 0) ? ctx->model->opset_import[i]->domain : "ai.onnx", ctx->model->opset_import[i]->version);
 		}
 		if(ctx->g)
 			onnx_graph_dump(ctx->g, detail);
@@ -2123,5 +2080,48 @@ void onnx_run(struct onnx_context_t * ctx)
 			if(n->reshape(n))
 				n->operator(n);
 		}
+	}
+}
+
+int onnx_get_graph_nlen(struct onnx_context_t * ctx) {
+	printf("ctx = 0x%016llX\n", ctx);
+	printf("ctx->g = 0x%016llX\n", ctx->g);
+	return ctx->g->nlen;
+}
+
+pcd_runtime_pointer_t onnx_benchmark_get_name(struct onnx_context_t * ctx, int i) {
+	char *name;
+	int len;
+	pcd_runtime_pointer_t name_app_addr;
+	struct onnx_node_t * n;
+
+	if (i >= ctx->g->nlen) {
+		return 0;
+	}
+
+	name = onnx_malloc(256, &name_app_addr);
+	if (name == NULL) {
+		printf("ERROR: Failed to allocate name buffer\n");
+		return 0;
+	}
+
+	n = &ctx->g->nodes[i];
+	len = snprintf(name, 255, "%s-%d", n->proto->op_type, n->opset);
+	len += snprintf(name + len, 255 - len, "%*s", 24 - len, n->r->name);
+
+	return name_app_addr;
+}
+
+void onnx_run_single_node(struct onnx_context_t * ctx, int i) {
+	struct onnx_node_t * n;
+
+	if (i < ctx->g->nlen) {
+		n = &ctx->g->nodes[i];
+		if(n->reshape(n))
+			n->operator(n);
+		return;
+	}
+	else {
+		printf("ERROR: i = %d larger than ctx->g->nlen = %d\n", i, ctx->g->nlen);
 	}
 }

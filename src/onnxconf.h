@@ -10,7 +10,6 @@ extern "C" {
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
-#include <malloc.h>
 #include <float.h>
 #include <math.h>
 #include <list.h>

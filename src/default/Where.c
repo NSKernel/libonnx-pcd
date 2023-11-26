@@ -363,7 +363,7 @@ static void Where_string(struct onnx_node_t * n)
 			px = (char **)onnx_tensor_broadcast_map_address(x2, y, i);
 		if(py[i])
 			free(py[i]);
-		py[i] = strdup(px[i]);
+		py[i] = strndup(px[i], strlen(px[i]) + 1);
 	}
 }
 

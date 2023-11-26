@@ -8,6 +8,38 @@ extern "C" {
 #include <onnxconf.h>
 #include <onnx.proto3.pb-c.h>
 
+#ifndef WASM_ENV
+#define CLOCK_REALTIME           0
+#define CLOCK_MONOTONIC          1
+#define CLOCK_PROCESS_CPUTIME_ID 2
+#define CLOCK_THREAD_CPUTIME_ID  3
+
+typedef long int time_t;
+
+typedef int clockid_t;
+
+struct timespec {
+    time_t tv_sec;
+    long tv_nsec;
+};
+
+int clock_gettime(clockid_t clock_id, struct timespec *tp);
+
+void srand(unsigned s);
+int rand(void);
+
+#define	FE_TONEAREST		0x000
+
+int	fegetround(void);
+int	fesetround(int);
+
+#endif
+
+#ifndef WASM_ENV
+#include "app.h"
+#include "runtime.h"
+#endif
+
 #define LIBONNX_MAJOY			(1)
 #define LIBONNX_MINIOR			(0)
 #define LIBONNX_PATCH			(0)
@@ -73,12 +105,27 @@ struct onnx_graph_t {
 };
 
 struct onnx_context_t {
-	Onnx__ModelProto * model;
+	union {
+		Onnx__ModelProto * model;
+		uint64_t dummy1;
+	};
+	union {
 	struct hmap_t * map;
+	uint64_t dummy2;
+	};
+	union {
 	struct onnx_resolver_t ** r;
+	uint64_t dummy3;
+	};
+	union {
 	void ** rctx;
+	uint64_t dummy4;
+	};
 	int rlen;
+	union {
 	struct onnx_graph_t * g;
+	uint64_t dummy5;
+	};
 };
 
 struct onnx_resolver_t {
@@ -254,8 +301,11 @@ struct onnx_resolver_t {
 	void (*op_SoftmaxCrossEntropyLoss)(struct onnx_node_t * n);
 };
 
+#ifdef WASM_ENV
 struct onnx_context_t * onnx_context_alloc(const void * buf, size_t len, struct onnx_resolver_t ** r, int rlen);
-struct onnx_context_t * onnx_context_alloc_from_file(const char * filename, struct onnx_resolver_t ** r, int rlen);
+#else
+pcd_runtime_pointer_t onnx_context_alloc(const void * buf, size_t len, struct onnx_resolver_t ** r, int rlen);
+#endif
 void onnx_context_free(struct onnx_context_t * ctx);
 
 struct onnx_graph_t * onnx_graph_alloc(struct onnx_context_t * ctx, Onnx__GraphProto * graph);
@@ -265,11 +315,30 @@ const char * onnx_tensor_type_tostring(enum onnx_tensor_type_t type);
 int onnx_tensor_type_sizeof(enum onnx_tensor_type_t type);
 struct onnx_tensor_t * onnx_tensor_search(struct onnx_context_t * ctx, const char * name);
 struct onnx_tensor_t * onnx_tensor_alloc(const char * name, enum onnx_tensor_type_t type, int * dims, int ndim);
-struct onnx_tensor_t * onnx_tensor_alloc_from_file(const char * filename);
 void onnx_tensor_free(struct onnx_tensor_t * t);
 int onnx_tensor_equal(struct onnx_tensor_t * a, struct onnx_tensor_t * b);
 void onnx_tensor_reinit(struct onnx_tensor_t * t, enum onnx_tensor_type_t type, int * dims, int ndim);
 void onnx_tensor_apply(struct onnx_tensor_t * t, void * buf, size_t len);
+
+#ifndef WASM_ENV
+static inline void *onnx_malloc(size_t size, pcd_runtime_pointer_t *runtime_ptr) 
+{
+	void *ret_ptr;
+
+	*runtime_ptr = pcd_runtime_malloc(pcd_app_get_instance(), size, &ret_ptr);
+
+	return ret_ptr;
+}
+
+static inline void onnx_free(void *native_ptr) 
+{
+	pcd_runtime_pointer_t app_ptr = pcd_runtime_native_to_app(pcd_app_get_instance(), native_ptr);
+
+	if (app_ptr != 0) {
+		pcd_runtime_free(pcd_app_get_instance(), app_ptr);
+	}
+}
+#endif
 
 static inline int onnx_tensor_is_scalar(struct onnx_tensor_t * t)
 {
@@ -391,6 +460,11 @@ void onnx_graph_dump(struct onnx_graph_t * g, int detail);
 void onnx_context_dump(struct onnx_context_t * ctx, int detail);
 
 void onnx_run(struct onnx_context_t * ctx);
+#ifdef WASM_ENV
+int onnx_get_graph_nlen(struct onnx_context_t * ctx);
+char *onnx_benchmark_get_name(struct onnx_context_t * ctx, int i);
+void onnx_run_single_node(struct onnx_context_t * ctx, int i);
+#endif
 
 #ifdef __cplusplus
 }

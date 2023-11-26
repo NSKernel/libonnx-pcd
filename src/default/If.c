@@ -114,7 +114,7 @@ static void If_operator(struct onnx_node_t * n)
 					{
 						if(pb[o])
 							free(pb[o]);
-						pb[o] = strdup(pa[o]);
+						pb[o] = strndup(pa[o], strlen(pa[o]) + 1);
 					}
 				}
 				else

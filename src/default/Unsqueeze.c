@@ -53,7 +53,7 @@ static void Unsqueeze_operator(struct onnx_node_t * n)
 		{
 			if(py[i])
 				free(py[i]);
-			py[i] = strdup(px[i]);
+			py[i] = strndup(px[i], strlen(px[i]) + 1);
 		}
 	}
 	else

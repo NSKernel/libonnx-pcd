@@ -12,6 +12,7 @@
 *.a
 *.so
 *~
+*.aot
 
 #
 # Generated files

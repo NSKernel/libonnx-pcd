@@ -91,7 +91,7 @@ static void Concat_operator(struct onnx_node_t * n)
 			{
 				if(py[k + o])
 					free(py[k + o]);
-				py[k + o] = strdup(px[o]);
+				py[k + o] = strndup(px[o], strlen(px[o]) + 1);
 				if(++j == xpitch)
 				{
 					k += (ypitch - xpitch);

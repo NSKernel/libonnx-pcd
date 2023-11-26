@@ -267,7 +267,7 @@ static void Expand_string(struct onnx_node_t * n)
 		px = onnx_tensor_broadcast_map_address(x, y, i);
 		if(py[i])
 			free(py[i]);
-		py[i] = strdup(px[i]);
+		py[i] = strndup(px[i], strlen(px[i]) + 1);
 	}
 }
 

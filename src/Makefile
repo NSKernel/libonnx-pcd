@@ -13,10 +13,12 @@ OC			:= $(CROSS_COMPILE)objcopy
 OD			:= $(CROSS_COMPILE)objdump
 RM			:= rm -fr
 
+PCD_ROOT	:= ../../../../../
+
 ASFLAGS		:= -g -ggdb -Wall -O3
-CFLAGS		:= -g -ggdb -Wall -O3
+CFLAGS		:= -g -ggdb -Wall -O3 -DPCD_CONFIG_RUNTIME_WAMR -nostdinc -Wno-format -fno-builtin-printf
 CXXFLAGS	:= -g -ggdb -Wall -O3
-INCDIRS		:= -I .
+INCDIRS		:= -I . -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(PCD_ROOT)/include -I$(PCD_ROOT)/runtime/wamr/wasm-micro-runtime/core/iwasm/include -I$(PCD_ROOT)/runtime/wamr/wasm-micro-runtime/core/iwasm/interpreter -I$(PCD_ROOT)/runtime/wamr/wasm-micro-runtime/core/shared/utils -I$(PCD_ROOT)/runtime/wamr/wasm-micro-runtime/core/shared/platform/linux-sgx
 SRCDIRS		:= . default
 
 SFILES		:= $(foreach dir, $(SRCDIRS), $(wildcard $(dir)/*.S))

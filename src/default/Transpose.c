@@ -423,7 +423,7 @@ static void Transpose_string(struct onnx_node_t * n)
 		ox = onnx_tensor_indices_to_offset(x, ix);
 		if(py[oy])
 			free(py[oy]);
-		py[oy] = strdup(px[ox]);
+		py[oy] = strndup(px[ox], strlen(px[ox]) + 1);
 	}
 }
 

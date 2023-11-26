@@ -166,7 +166,7 @@ void hmap_add(struct hmap_t * m, const char * key, void * value)
 	if(!pos)
 		return;
 
-	pos->key = strndup(key, strlen(key) + 1);
+	pos->key = strdup(key);
 	pos->value = value;
 	init_hlist_node(&pos->node);
 	hlist_add_head(&pos->node, &m->hash[shash(pos->key) & (m->size - 1)]);

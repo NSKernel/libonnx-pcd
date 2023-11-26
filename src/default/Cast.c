@@ -148,8 +148,8 @@ static void Cast_bool(struct onnx_node_t * n)
 			{
 				if(py[i])
 					free(py[i]);
-				sprintf(buf, "%u", (px[i] != 0) ? 1 : 0);
-				py[i] = strdup(buf);
+				snprintf(buf, 32, "%u", (px[i] != 0) ? 1 : 0);
+				py[i] = strndup(buf, 32);
 			}
 		}
 		break;
@@ -267,8 +267,8 @@ static void Cast_int8(struct onnx_node_t * n)
 			{
 				if(py[i])
 					free(py[i]);
-				sprintf(buf, "%d", px[i]);
-				py[i] = strdup(buf);
+				snprintf(buf, 32, "%d", px[i]);
+				py[i] = strndup(buf, 32);
 			}
 		}
 		break;
@@ -386,8 +386,8 @@ static void Cast_int16(struct onnx_node_t * n)
 			{
 				if(py[i])
 					free(py[i]);
-				sprintf(buf, "%d", px[i]);
-				py[i] = strdup(buf);
+				snprintf(buf, 32, "%d", px[i]);
+				py[i] = strndup(buf, 32);
 			}
 		}
 		break;
@@ -505,8 +505,8 @@ static void Cast_int32(struct onnx_node_t * n)
 			{
 				if(py[i])
 					free(py[i]);
-				sprintf(buf, "%d", px[i]);
-				py[i] = strdup(buf);
+				snprintf(buf, 32, "%d", px[i]);
+				py[i] = strndup(buf, 32);
 			}
 		}
 		break;
@@ -624,8 +624,8 @@ static void Cast_int64(struct onnx_node_t * n)
 			{
 				if(py[i])
 					free(py[i]);
-				sprintf(buf, "%ld", px[i]);
-				py[i] = strdup(buf);
+				snprintf(buf, 32, "%ld", px[i]);
+				py[i] = strndup(buf, 32);
 			}
 		}
 		break;
@@ -743,8 +743,8 @@ static void Cast_uint8(struct onnx_node_t * n)
 			{
 				if(py[i])
 					free(py[i]);
-				sprintf(buf, "%u", px[i]);
-				py[i] = strdup(buf);
+				snprintf(buf, 32, "%u", px[i]);
+				py[i] = strndup(buf, 32);
 			}
 		}
 		break;
@@ -862,8 +862,8 @@ static void Cast_uint16(struct onnx_node_t * n)
 			{
 				if(py[i])
 					free(py[i]);
-				sprintf(buf, "%u", px[i]);
-				py[i] = strdup(buf);
+				snprintf(buf, 32, "%u", px[i]);
+				py[i] = strndup(buf, 32);
 			}
 		}
 		break;
@@ -981,8 +981,8 @@ static void Cast_uint32(struct onnx_node_t * n)
 			{
 				if(py[i])
 					free(py[i]);
-				sprintf(buf, "%u", px[i]);
-				py[i] = strdup(buf);
+				snprintf(buf, 32, "%u", px[i]);
+				py[i] = strndup(buf, 32);
 			}
 		}
 		break;
@@ -1100,8 +1100,8 @@ static void Cast_uint64(struct onnx_node_t * n)
 			{
 				if(py[i])
 					free(py[i]);
-				sprintf(buf, "%lu", px[i]);
-				py[i] = strdup(buf);
+				snprintf(buf, 32, "%lu", px[i]);
+				py[i] = strndup(buf, 32);
 			}
 		}
 		break;
@@ -1219,8 +1219,8 @@ static void Cast_bfloat16(struct onnx_node_t * n)
 			{
 				if(py[i])
 					free(py[i]);
-				sprintf(buf, "%g", bfloat16_to_float32(px[i]));
-				py[i] = strdup(buf);
+				snprintf(buf, 32, "%g", bfloat16_to_float32(px[i]));
+				py[i] = strndup(buf, 32);
 			}
 		}
 		break;
@@ -1338,8 +1338,8 @@ static void Cast_float16(struct onnx_node_t * n)
 			{
 				if(py[i])
 					free(py[i]);
-				sprintf(buf, "%g", float16_to_float32(px[i]));
-				py[i] = strdup(buf);
+				snprintf(buf, 32, "%g", float16_to_float32(px[i]));
+				py[i] = strndup(buf, 32);
 			}
 		}
 		break;
@@ -1457,8 +1457,8 @@ static void Cast_float32(struct onnx_node_t * n)
 			{
 				if(py[i])
 					free(py[i]);
-				sprintf(buf, "%g", px[i]);
-				py[i] = strdup(buf);
+				snprintf(buf, 32, "%g", px[i]);
+				py[i] = strndup(buf, 32);
 			}
 		}
 		break;
@@ -1576,8 +1576,8 @@ static void Cast_float64(struct onnx_node_t * n)
 			{
 				if(py[i])
 					free(py[i]);
-				sprintf(buf, "%g", px[i]);
-				py[i] = strdup(buf);
+				snprintf(buf, 32, "%g", px[i]);
+				py[i] = strndup(buf, 32);
 			}
 		}
 		break;
@@ -1694,7 +1694,7 @@ static void Cast_string(struct onnx_node_t * n)
 			{
 				if(py[i])
 					free(py[i]);
-				py[i] = strdup(px[i]);
+				py[i] = strndup(px[i], strlen(px[i]) + 1);
 			}
 		}
 		break;
