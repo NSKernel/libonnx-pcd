@@ -1744,6 +1744,9 @@ char * onnx_attribute_read_string(struct onnx_node_t * n, const char * name, cha
 	{
 		if(attr->s.len > 0)
 		{
+			attr->s.data=realloc(attr->s.data,attr->s.len+1);
+			if(attr->s.data==NULL)
+					return def;
 			attr->s.data[attr->s.len] = 0;
 			return (char *)attr->s.data;
 		}
