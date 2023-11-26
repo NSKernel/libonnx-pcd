@@ -15,7 +15,7 @@ OD			:= $(CROSS_COMPILE)objdump
 RM			:= rm -fr
 
 ASFLAGS		:= -g -ggdb -Wall -O3
-CFLAGS		:= $(TARGET) --sysroot=$(WASI_SDK_PATH)/share/wasi-sysroot/ -D_WASI_EMULATED_PROCESS_CLOCKS
+CFLAGS		:= $(TARGET) -mbulk-memory -O3 --sysroot=$(WASI_SDK_PATH)/share/wasi-sysroot/ -D_WASI_EMULATED_PROCESS_CLOCKS
 CXXFLAGS	:= $(TARGET) --sysroot=$(WASI_SDK_PATH)/share/wasi-sysroot/ -D_WASI_EMULATED_PROCESS_CLOCKS
 INCDIRS		:= -I .
 SRCDIRS		:= . default

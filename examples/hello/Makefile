@@ -7,6 +7,8 @@ CROSS_COMPILE	?=
 
 PCD_ROOT := ../../../../../../
 
+AOTCC       := /home/nskernel/wasm-micro-runtime/wamr-compiler/build/wamrc
+
 include $(PCD_ROOT)/config.mk
 include $(PCD_ROOT)/buildenv.mk
 
@@ -53,9 +55,17 @@ VPATH		:= $(OBJDIRS)
 
 LIBOBJS     := $(foreach dir, ../../src ../../src/default, $(wildcard $(dir)/*.o))
 
-.PHONY: all clean
+.PHONY: all clean aot
 
 all : $(NAME)
+
+aot : $(NAME).aot
+
+$(NAME).aot : $(NAME)
+	@echo [AOT] AOT Compiling $@
+	@$(AOTCC) --size-level=1 -o hello.aot hello
+	@echo [HASH]  $@
+	@sha256sum hello.aot | cut -d " " -f 1 | xxd -r -p > ../../../app.hash
 
 $(NAME) : $(OBJS) $(LIBOBJS)
 	@echo [LD] Linking $@
@@ -76,6 +86,6 @@ $(CPPOBJS) : %.o : %.cpp
 	@$(CXX) $(CXXFLAGS) -MD -MP -MF $@.d $(INCDIRS) -c $< -o $@
 
 clean:
-	@$(RM) $(DEPS) $(OBJS) $(NAME)
+	@$(RM) $(DEPS) $(OBJS) $(NAME) $(NAME).aot
 
 sinclude $(DEPS)
