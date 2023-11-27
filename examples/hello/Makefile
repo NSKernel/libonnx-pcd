@@ -57,7 +57,7 @@ LIBOBJS     := $(foreach dir, ../../src ../../src/default, $(wildcard $(dir)/*.o
 
 .PHONY: all clean aot
 
-all : $(NAME)
+all : aot
 
 aot : $(NAME).aot
 

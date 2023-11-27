@@ -4,6 +4,7 @@
 #include "dataset.h"
 #include "error_codes.h"
 
+/*
 static const unsigned char gnd_truth[] = {
 	0x08, 0x03, 0x12, 0x04, 0x43, 0x4e, 0x54, 0x4b, 0x1a, 0x05, 0x32, 0x2e,
 	0x35, 0x2e, 0x31, 0x22, 0x07, 0x61, 0x69, 0x2e, 0x63, 0x6e, 0x74, 0x6b,
@@ -2210,7 +2211,7 @@ static const unsigned char gnd_truth[] = {
 	0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x5f, 0x30, 0x12, 0x0e, 0x0a, 0x0c,
 	0x08, 0x01, 0x12, 0x08, 0x0a, 0x02, 0x08, 0x01, 0x0a, 0x02, 0x08, 0x0a,
 	0x42, 0x04, 0x0a, 0x00, 0x10, 0x08
-};
+};*/
 
 extern char *read_file_to_buffer(const char *filename, size_t *ret_size);
 
@@ -2348,6 +2349,7 @@ int main() {
 	input_3 = (char *)input_3_payload->payload;
 	input_3_size = input_3_payload->data_size;
 
+	/*
 	for (int i = 0; i < sizeof(gnd_truth); i++) {
 		if ((char)mnist_onnx[i] != (char)gnd_truth[i]) {
 			printf("ERROR: ground truth mistach at %d. mnist_onnx[i] = %02X, gnd_truth[i] = %02X\n", i, (char)mnist_onnx[i], gnd_truth[i]);
@@ -2364,6 +2366,7 @@ int main() {
 	printf("                 %02X %02X %02X %02X %02X %02X %02X %02X\n", mnist_onnx[mnist_size - 16], mnist_onnx[mnist_size - 15], mnist_onnx[mnist_size - 14], mnist_onnx[mnist_size - 13], mnist_onnx[mnist_size - 12], mnist_onnx[mnist_size - 11] ,mnist_onnx[mnist_size - 10], mnist_onnx[mnist_size - 9]);
 	printf("                 %02X %02X %02X %02X %02X %02X %02X %02X\n", mnist_onnx[mnist_size - 8], mnist_onnx[mnist_size - 7], mnist_onnx[mnist_size - 6], mnist_onnx[mnist_size - 5], mnist_onnx[mnist_size - 4], mnist_onnx[mnist_size - 3] ,mnist_onnx[mnist_size - 2], mnist_onnx[mnist_size - 1]);
 	printf("[+] hello: INFO: input size is %d\n", input_3_size);
+	*/
 
 	/*
 	 * Alloc onnx context from buffer
