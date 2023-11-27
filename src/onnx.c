@@ -36,30 +36,6 @@ extern int printf(const char *, ...);
 
 #define ONNX_LOG(...)	printf(__VA_ARGS__)
 
-static inline uint64_t time_get(void)
-{
-	struct timespec ts;
-	clock_gettime(CLOCK_MONOTONIC, &ts);
-	return (uint64_t)ts.tv_sec * 1000000000ULL + (uint64_t)ts.tv_nsec;
-}
-
-void stopwatch_start(uint64_t *time)
-{
-	if(time)
-		*time = time_get();
-}
-
-void stopwatch_lap(char *txt, uint64_t *time)
-{
-	uint64_t new_time;
-	if(time)
-	{
-		new_time = time_get();
-		printf("time elapsed at %s is %llu\n", txt, new_time - *time);
-		*time = time_get();
-	}
-}
-
 static void hmap_entry_callback(struct hmap_t * m, struct hmap_entry_t * e)
 {
 	if(e && e->value)
